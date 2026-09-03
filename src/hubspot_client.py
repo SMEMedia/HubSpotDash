@@ -34,10 +34,13 @@ class HubSpotClient:
         if not self.access_token:
             raise HubSpotClientError("HubSpot access token is missing.")
 
-    def marketing_emails(self, created_after: date | None = None) -> list[dict[str, Any]]:
+    def marketing_emails(self, published_after: date | None = None) -> list[dict[str, Any]]:
         params: dict[str, Any] = {"limit": 100}
-        if created_after:
-            params["createdAfter"] = f"{created_after.isoformat()}T00:00:00Z"
+        if published_after:
+            # The dashboard range is based on when an email was published/sent,
+            # not when its draft was originally created. A createdAt filter drops
+            # reused drafts that are published during the requested period.
+            params["publishedAfter"] = f"{published_after.isoformat()}T00:00:00Z"
 
         emails: list[dict[str, Any]] = []
         after = ""

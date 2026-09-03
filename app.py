@@ -167,7 +167,7 @@ def fetch_live_data(
     for token_label, token in settings.token_options():
         candidate = HubSpotClient(token, base_url=settings.base_url, use_legacy_events=True)
         try:
-            emails = candidate.marketing_emails(created_after=start_date)
+            emails = candidate.marketing_emails(published_after=start_date)
             client = candidate
             break
         except HubSpotClientError as error:
