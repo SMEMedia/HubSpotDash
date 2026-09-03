@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 import ast
 
 import altair as alt
@@ -37,6 +37,7 @@ from src.google_sheets_cache import missing_config
 from src.google_sheets_cache import load_worksheet
 from src.link_names import article_or_site_name
 from src.metrics import add_derived_metrics, summarize_metrics
+from src.refresh_time import current_refresh_timestamp, latest_refresh_text
 
 
 REFRESH_MODES = [
@@ -129,10 +130,10 @@ def last_refresh_text(sheets_cache_version: tuple[bool, str, str, str]) -> str:
     if refresh_log is None or refresh_log.empty or "refreshed_at" not in refresh_log.columns:
         return "No refresh logged yet"
 
-    refreshed_at = pd.to_datetime(refresh_log["refreshed_at"], errors="coerce").dropna()
-    if refreshed_at.empty:
+    refreshed_at = latest_refresh_text(refresh_log["refreshed_at"])
+    if refreshed_at is None:
         return "No refresh logged yet"
-    return refreshed_at.max().strftime("%Y-%m-%d %I:%M %p")
+    return refreshed_at
 
 
 @st.cache_data(show_spinner=False)
@@ -310,7 +311,7 @@ def save_enriched_google_cache(
     save_google_cache_sheet(keyword_cache, google_cache, "keyword_summary", ["Keyword"])
     append_google_cache_row(
         {
-            "refreshed_at": datetime.now().isoformat(timespec="seconds"),
+            "refreshed_at": current_refresh_timestamp(),
             "start_date": start_date.isoformat(),
             "end_date": end_date.isoformat(),
             "email_types": ", ".join(selected_email_types),
