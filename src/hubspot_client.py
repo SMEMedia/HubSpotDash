@@ -122,22 +122,22 @@ class HubSpotClient:
         return sum(1 for _ in self._filtered_events(campaign_id, event_type))
 
     def _filtered_events(self, campaign_id: str, event_type: str) -> list[dict[str, Any]]:
-        params: dict[str, Any] = {
-            "limit": 1000,
-            "campaignId": campaign_id,
-            "eventType": event_type,
-        }
-        events: list[dict[str, Any]] = []
-
-        while True:
-            payload = self._get_json(self.EMAIL_EVENTS_PATH, params=params)
-            for event in payload.get("events", []):
-                if event.get("filteredEvent") is False:
-                    events.append(event)
-
-            if not payload.get("hasMore"):
-                return events
-            params["offset"] = payload.get("offset")
+            params: dict[str, Any] = {
+                "limit": 1000,
+                "emailCampaignId": campaign_id,  # Changed from "campaignId" to "emailCampaignId"
+                "eventType": event_type,
+            }
+            events: list[dict[str, Any]] = []
+    
+            while True:
+                payload = self._get_json(self.EMAIL_EVENTS_PATH, params=params)
+                for event in payload.get("events", []):
+                    if event.get("filteredEvent") is False:
+                        events.append(event)
+    
+                if not payload.get("hasMore"):
+                    return events
+                params["offset"] = payload.get("offset")
 
     def _get_json(self, path: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
         response = requests.get(
